@@ -1,27 +1,36 @@
-"""Base Page Object - shared methods for all pages."""
-from playwright.sync_api import Page
-import logging
-logger = logging.getLogger(__name__)
-
 class BasePage:
-    def __init__(self, page: Page):
+    def __init__(self, page):
         self.page = page
 
-    def navigate(self, url: str):
-        logger.info(f"Navigating to: {url}")
-        self.page.goto(url)
-        self.page.wait_for_load_state("networkidle")
+    def navigate(self, url=None):
+        target = url or getattr(self, 'url', None)
+        if target:
+            self.page.goto(target)
+            self.page.wait_for_load_state("networkidle")
 
-    def get_title(self) -> str:
-        return self.page.title()
+    def wait_for_element(self, selector, timeout=10000):
+        self.page.wait_for_selector(selector, timeout=timeout)
 
-    def get_current_url(self) -> str:
+    def click(self, selector):
+        self.page.locator(selector).first.click()
+
+    def fill(self, selector, value):
+        self.page.locator(selector).first.fill(value)
+
+    def get_text(self, selector):
+        return self.page.locator(selector).first.inner_text()
+
+    def is_visible(self, selector):
+        try:
+            return self.page.locator(selector).first.is_visible()
+        except Exception:
+            return False
+
+    def is_element_present(self, selector):
+        return self.page.locator(selector).count() > 0
+
+    def get_current_url(self):
         return self.page.url
 
-    def is_element_visible(self, selector: str) -> bool:
-        return self.page.is_visible(selector)
-
-    def take_screenshot(self, name: str):
-        import os
-        os.makedirs("reports/screenshots", exist_ok=True)
-        self.page.screenshot(path=f"reports/screenshots/{name}.png", full_page=True)
+    def take_screenshot(self, path="screenshot.png"):
+        self.page.screenshot(path=path)
