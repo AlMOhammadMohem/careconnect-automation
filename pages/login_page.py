@@ -1,59 +1,57 @@
-"""Login Page Object Model for CareConnect."""
-from playwright.sync_api import Page, expect
+import os
 from pages.base_page import BasePage
-import logging
-logger = logging.getLogger(__name__)
+
+BASE_URL = os.getenv("CC_BASE_URL", "https://qc.care-connect.health")
+
 
 class LoginPage(BasePage):
-    USERNAME_INPUT  = 'input[placeholder="Enter your username"]'
-    PASSWORD_INPUT  = 'input[placeholder="Enter your password"]'
-    SHOW_HIDE_BTN   = 'button[type="button"]:near(input[type="password"])'
-    LOGIN_BUTTON    = 'button[type="submit"]'
-    RESET_PWD_LINK  = 'a[href="/side-forgot-pwd"]'
-    AR_LANG_BUTTON  = 'button:has-text("العربية")'
-    BRAND_LOGO      = 'img[alt="CareConnect Logo"]'
-    ERROR_MESSAGE   = '[class*="error"], [class*="alert"], [role="alert"]'
-
-    def __init__(self, page: Page):
+    def __init__(self, page):
         super().__init__(page)
+        self.url = BASE_URL + "/login"
 
-    def open(self):
-        from utils.test_data import LOGIN_URL
-        self.navigate(LOGIN_URL)
-        return self
+        # Locators
+        self.email_input = "input[type='email'], input[name='email'], input[placeholder*='mail' i], input[placeholder*='Email' i]"
+        self.password_input = "input[type='password']"
+        self.login_button = "button[type='submit'], button:has-text('Login'), button:has-text('Sign In'), button:has-text('Log In')"
+        self.error_message = ".error, .alert, [class*='error'], [class*='alert'], [class*='invalid']"
 
-    def enter_username(self, username: str):
-        self.page.fill(self.USERNAME_INPUT, username)
-        return self
-
-    def enter_password(self, password: str):
-        self.page.fill(self.PASSWORD_INPUT, password)
-        return self
-
-    def click_login(self):
-        self.page.click(self.LOGIN_BUTTON)
+    def navigate(self):
+        self.page.goto(self.url)
         self.page.wait_for_load_state("networkidle")
-        return self
 
-    def login(self, username: str, password: str):
-        return self.enter_username(username).enter_password(password).click_login()
+    def enter_email(self, email):
+        self.page.locator(self.email_input).first.fill(email)
 
-    def click_reset_password(self):
-        self.page.click(self.RESET_PWD_LINK)
-        self.page.wait_for_load_state("networkidle")
-        return self
+    def enter_password(self, password):
+        self.page.locator(self.password_input).first.fill(password)
 
-    def toggle_password_visibility(self):
-        self.page.click(self.SHOW_HIDE_BTN)
-        return self
+    def click_login_button(self):
+        self.page.locator(self.login_button).first.click()
 
-    def get_username_value(self): return self.page.input_value(self.USERNAME_INPUT)
-    def get_password_input_type(self): return self.page.get_attribute(self.PASSWORD_INPUT, "type")
-    def get_error_message(self):
-        try: return self.page.text_content(self.ERROR_MESSAGE)
-        except: return ""
-    def is_login_button_visible(self): return self.page.is_visible(self.LOGIN_BUTTON)
-    def is_login_button_enabled(self): return self.page.is_enabled(self.LOGIN_BUTTON)
-    def is_reset_password_link_visible(self): return self.page.is_visible(self.RESET_PWD_LINK)
-    def is_logo_visible(self): return self.page.is_visible(self.BRAND_LOGO)
-    def get_username_placeholder(self): return self.page.get_attribute(self.USERNAME_INPUT, "placeholder")
+    def login(self, email, password):
+        self.navigate()
+        self.enter_email(email)
+        self.enter_password(password)
+        self.click_login_button()
+
+    def is_email_field_visible(self):
+        return self.page.locator(self.email_input).first.is_visible()
+
+    def is_password_field_visible(self):
+        return self.page.locator(self.password_input).first.is_visible()
+
+    def is_login_button_visible(self):
+        return self.page.locator(self.login_button).first.is_visible()
+
+    def has_error_message(self):
+        try:
+            return self.page.locator(self.error_message).first.is_visible()
+        except Exception:
+            return False
+
+    def get_email_value(self):
+        return self.page.locator(self.email_input).first.input_value()
+
+    def is_password_masked(self):
+        field_type = self.page.locator(self.password_input).first.get_attribute("type")
+        return field_type == "password"
