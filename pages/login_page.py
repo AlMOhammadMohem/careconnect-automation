@@ -9,9 +9,9 @@ class LoginPage(BasePage):
         super().__init__(page)
         self.url = BASE_URL + "/login"
 
-        # Locators
-        self.email_input = "input[type='email'], input[name='email'], input[placeholder*='mail' i], input[placeholder*='Email' i]"
-        self.password_input = "input[type='password']"
+        # Correct locators from live inspection of the page
+        self.email_input = "#username"
+        self.password_input = "#password"
         self.login_button = "button[type='submit'], button:has-text('Login'), button:has-text('Sign In'), button:has-text('Log In')"
         self.error_message = ".error, .alert, [class*='error'], [class*='alert'], [class*='invalid']"
 
@@ -20,10 +20,10 @@ class LoginPage(BasePage):
         self.page.wait_for_load_state("networkidle")
 
     def enter_email(self, email):
-        self.page.locator(self.email_input).first.fill(email)
+        self.page.locator(self.email_input).fill(email)
 
     def enter_password(self, password):
-        self.page.locator(self.password_input).first.fill(password)
+        self.page.locator(self.password_input).fill(password)
 
     def click_login_button(self):
         self.page.locator(self.login_button).first.click()
@@ -35,10 +35,10 @@ class LoginPage(BasePage):
         self.click_login_button()
 
     def is_email_field_visible(self):
-        return self.page.locator(self.email_input).first.is_visible()
+        return self.page.locator(self.email_input).is_visible()
 
     def is_password_field_visible(self):
-        return self.page.locator(self.password_input).first.is_visible()
+        return self.page.locator(self.password_input).is_visible()
 
     def is_login_button_visible(self):
         return self.page.locator(self.login_button).first.is_visible()
@@ -50,8 +50,8 @@ class LoginPage(BasePage):
             return False
 
     def get_email_value(self):
-        return self.page.locator(self.email_input).first.input_value()
+        return self.page.locator(self.email_input).input_value()
 
     def is_password_masked(self):
-        field_type = self.page.locator(self.password_input).first.get_attribute("type")
+        field_type = self.page.locator(self.password_input).get_attribute("type")
         return field_type == "password"
